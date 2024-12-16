@@ -5,6 +5,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.transforms.functional import to_pil_image
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 # As mentioned in readme.html, each of these files is a Python "pickled" object produced with cPickle,
 # so, we "unpickle" them accodringly.
@@ -111,3 +113,34 @@ def data_loader(batch):
     test_loader = DataLoader(test_dataset, batch_size=batch, shuffle=False)
     return train_loader, test_loader
 
+def apply_pca(x_train, x_test, n_components):
+    """
+    Apply PCA to reduce the dimensionality of the dataset.
+    Parameters:
+        x_train (numpy array): Training data.
+        x_test (numpy array): Testing data.
+        n_components (int): Number of principal components.
+    Returns:
+        x_train_pca, x_test_pca: Transformed datasets with reduced dimensions.
+    """
+    # Flatten the images for PCA
+    x_train_flat = x_train.reshape(x_train.shape[0], -1)  # [num_samples, 3072]
+    x_test_flat = x_test.reshape(x_test.shape[0], -1)     # [num_samples, 3072]
+
+    # Normalize data before PCA (mean=0, variance=1)
+    scaler = StandardScaler()
+    x_train_flat = scaler.fit_transform(x_train_flat)
+    x_test_flat = scaler.transform(x_test_flat)
+
+    # Apply PCA
+    pca = PCA(n_components=n_components)
+    x_train_pca = pca.fit_transform(x_train_flat)
+    x_test_pca = pca.transform(x_test_flat)
+
+    print(f"Explained variance ratio with {n_components} components: {np.sum(pca.explained_variance_ratio_):.2f}")
+    print(f"Shape after PCA - x_train: {x_train_pca.shape}, x_test: {x_test_pca.shape}")
+    return x_train_pca, x_test_pca
+
+
+
+# Optional: Return the PCA-transformed data for PyTorch DataLoader if required

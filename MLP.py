@@ -92,7 +92,7 @@ for epoch in range(num_epochs):
     avg_loss = running_loss / len(train_loader)
     print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Accuracy: {train_accuracy:.2f}%")
 
-#   --- EARLY STOPPING CODE -- RECOMMENDED BY CHAT GPT ---
+#   --- EARLY STOPPING CODE - RECOMMENDED BY CHAT GPT ---
 
     # Validation step for early stopping
     model.eval()

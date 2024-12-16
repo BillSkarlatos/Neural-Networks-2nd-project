@@ -1,47 +1,36 @@
 import numpy as np
-from sklearn import svm
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
-import tensorflow as tf # Recommended by ChatGPT
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 import dataHandling as dh
 
-# Data Loading
-input_data, input_labels, test_data, test_labels = dh.load_data(database, 0)
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+input_data, input_labels, test_data, test_labels = dh.load_data("DB",0)
 
+input_data = input_data.astype('float32') / 255.0
+test_data = test_data.astype('float32') / 255.0
 
-# Χρησιμοποίηση μόνο 2 κατηγοριών για απλό SVM (π.χ. κατηγορίες 0 και 1)
-classes = [0, 1]
-train_filter = np.isin(y_train, classes).flatten()
-test_filter = np.isin(y_test, classes).flatten()
+# Apply PCA to reduce dimensions to 50 components
+x_train_pca, x_test_pca = dh.apply_pca(input_data, test_data, n_components=50)
 
-x_train, y_train = x_train[train_filter], y_train[train_filter]
-x_test, y_test = x_test[test_filter], y_test[test_filter]
-
-# Grayscale and normalization
-x_train = np.mean(x_train, axis=3) / 255.0
-x_test = np.mean(x_test, axis=3) / 255.0
-
-# Επίπεδη απεικόνιση
-x_train = x_train.reshape(x_train.shape[0], -1)
-x_test = x_test.reshape(x_test.shape[0], -1)
-
-# Κανονικοποίηση δεδομένων
+# Initialize an SVM classifier
+# Optional: Use StandardScaler for better scaling
 scaler = StandardScaler()
-x_train = scaler.fit_transform(x_train)
-x_test = scaler.transform(x_test)
+x_train = scaler.fit_transform(x_train_pca)
+x_test = scaler.transform(x_test_pca)
 
-# Εκπαίδευση SVM με γραμμικό πυρήνα
-model = svm.SVC(kernel='linear', C=1.0)
-model.fit(x_train, y_train.ravel())
+# Train an SVM classifier
+svm_model = SVC(kernel='linear', C=1.0, verbose=True)  # Linear kernel
+print("Training the SVM model...")
+svm_model.fit(x_train, input_labels)
 
-# Αξιολόγηση
-y_pred_train = model.predict(x_train)
-y_pred_test = model.predict(x_test)
 
-accuracy_train = accuracy_score(y_train, y_pred_train)
-accuracy_test = accuracy_score(y_test, y_pred_test)
+# Evaluate the SVM
+print("Evaluating the SVM model...")
+predicted_labels = svm_model.predict(test_data)
 
-print(f"Training Accuracy: {accuracy_train:.2f}")
-print(f"Testing Accuracy: {accuracy_test:.2f}")
+# Metrics
+accuracy = accuracy_score(test_labels, predicted_labels)
+print(f"Test Accuracy: {accuracy * 100:.2f}%")
+print("\nClassification Report:")
+print(classification_report(test_labels, predicted_labels))
