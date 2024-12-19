@@ -4,11 +4,13 @@ import dataHandling as dh
 import time
 
 # Nearest Class Centroid. 
-def NCC(database):
+def NCC():
+    database="DB"
     num_classes=10
     input_data, input_labels, test_data, test_labels = dh.load_data(database, 0)
     centroids = np.zeros((num_classes, input_data.shape[1]))
 
+    print("Fitting the data in the Nearest Class Centroid Classifier")
     start_time=time.time()
     for class_label in range(num_classes):
         class_data = input_data[input_labels == class_label]  # Images of this caregory/class.
